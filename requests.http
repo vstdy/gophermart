@@ -1,0 +1,68 @@
+### 1. Register cashback rule
+POST http://127.0.0.1:8081/api/goods
+Content-Type: application/json
+
+{
+  "match": "LG",
+  "reward": 5,
+  "reward_type": "%"
+}
+
+### 2. Create order to count cashback
+POST http://127.0.0.1:8081/api/orders
+Content-Type: application/json
+
+{
+  "order": "123455",
+  "goods": [
+    {
+      "description": "LG Monitor",
+      "price": 50000.0
+    }
+  ]
+}
+
+### 3. Get orders cashback
+GET http://127.0.0.1:8081/api/orders/123455
+
+### 4. Register user
+POST http://127.0.0.1:8080/api/user/register
+Content-Type: application/json; charset=UTF-8
+
+{
+  "login": "apricot",
+  "password": "1"
+}
+
+### 5. Login user
+POST http://127.0.0.1:8080/api/user/login
+Content-Type: application/json; charset=UTF-8
+
+{
+  "login": "apricot",
+  "password": "1"
+}
+
+### 6. Create order
+POST http://127.0.0.1:8080/api/user/orders
+Content-Type: text/plain; charset=UTF-8
+
+12345678903
+
+### 7. Get current user orders
+GET http://127.0.0.1:8080/api/user/orders
+
+### 8. Get current user balance
+GET http://127.0.0.1:8080/api/user/balance
+
+### 9. Add withdrawal
+POST http://127.0.0.1:8080/api/user/balance/withdraw
+Content-Type: application/json; charset=UTF-8
+
+{
+	"order": "2377225624",
+    "sum": 751
+}
+
+### 10. Get current user balance
+GET http://127.0.0.1:8080/api/user/balance/withdrawals
