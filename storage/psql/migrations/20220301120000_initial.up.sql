@@ -39,9 +39,9 @@ CREATE TABLE transactions
     "accrual"      INT         NOT NULL,
     "withdrawal"   INT         NOT NULL,
     "processed_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
-    PRIMARY KEY ("id")
+    PRIMARY KEY ("id"),
+    UNIQUE ("order")
 );
 
 CREATE INDEX transactions_user_id_idx ON transactions ("user_id");
-CREATE INDEX transactions_order_idx ON transactions ("order");
 CREATE INDEX transactions_processed_at_idx ON transactions (processed_at);

@@ -102,11 +102,11 @@ func (h Handler) addUserOrder(w http.ResponseWriter, r *http.Request) {
 	obj, err := h.addOrder(r.Context(), userID, orderID)
 	if err != nil {
 		if errors.Is(err, pkg.ErrAlreadyExists) && obj.UserID == userID {
-			http.Error(w, "order number already uploaded", http.StatusOK)
+			http.Error(w, "order number has been already uploaded", http.StatusOK)
 			return
 		}
 		if errors.Is(err, pkg.ErrAlreadyExists) {
-			http.Error(w, "order number already uploaded by another user", http.StatusConflict)
+			http.Error(w, "order number has been already uploaded by another user", http.StatusConflict)
 			return
 		}
 		if errors.Is(err, pkg.ErrInvalidInput) {
@@ -210,6 +210,10 @@ func (h Handler) addWithdrawal(w http.ResponseWriter, r *http.Request) {
 		}
 		if errors.Is(err, pkg.ErrInvalidInput) {
 			http.Error(w, "invalid order number format", http.StatusUnprocessableEntity)
+			return
+		}
+		if errors.Is(err, pkg.ErrAlreadyExists) {
+			http.Error(w, "withdrawal has been already added", http.StatusOK)
 			return
 		}
 

@@ -7,7 +7,6 @@ import (
 
 // Config keeps Service params.
 type Config struct {
-	AccrualSysAddress   string        `mapstructure:"accrual_system_address"`
 	UpdaterTimeout      time.Duration `mapstructure:"updater_timeout"`
 	StatusCheckInterval time.Duration `mapstructure:"status_check_interval"`
 }
@@ -28,7 +27,6 @@ func (config Config) Validate() error {
 // NewDefaultConfig builds a Config with default values.
 func NewDefaultConfig() Config {
 	return Config{
-		AccrualSysAddress:   "http://127.0.0.1:8081",
 		UpdaterTimeout:      5 * time.Second,
 		StatusCheckInterval: 5 * time.Second,
 	}

@@ -9,11 +9,11 @@ import (
 
 // Order keeps order data.
 type Order struct {
-	UserID     uuid.UUID   `json:"user_id"`
-	Number     string      `json:"order"`
-	Status     OrderStatus `json:"status"`
-	Accrual    float32     `json:"accrual"`
-	UploadedAt time.Time   `json:"uploaded_at"`
+	UserID     uuid.UUID
+	Number     string
+	Status     OrderStatus
+	Accrual    float32
+	UploadedAt time.Time
 }
 
 type OrderStatus string

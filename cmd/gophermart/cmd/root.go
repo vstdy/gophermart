@@ -54,16 +54,13 @@ func newRootCmd() *cobra.Command {
 
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config := common.GetConfigFromCmdCtx(cmd)
+			svcCtx, svcCancel := context.WithCancel(context.Background())
+			defer svcCancel()
 
-			svc, err := config.BuildService(config.StorageType)
+			svc, err := config.BuildService(svcCtx)
 			if err != nil {
 				return fmt.Errorf("app initialization: service building: %w", err)
 			}
-			defer func() {
-				if err = svc.Close(); err != nil {
-					log.Error().Err(err).Msg("Shutting down the app")
-				}
-			}()
 
 			srv := api.NewServer(svc, config)
 
@@ -77,12 +74,19 @@ func newRootCmd() *cobra.Command {
 			signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 			<-stop
 
+			svcCancel()
+
 			shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer shutdownCancel()
 
 			if err = srv.Shutdown(shutdownCtx); err != nil {
-				return fmt.Errorf("server shutdown failed: %w", err)
+				return fmt.Errorf("shutting shutdown server: %w", err)
 			}
+
+			if err = svc.Close(); err != nil {
+				log.Error().Err(err).Msg("shutting down service")
+			}
+
 			log.Info().Msg("server stopped")
 
 			return nil
@@ -96,7 +100,7 @@ func newRootCmd() *cobra.Command {
 	cmd.PersistentFlags().StringP(flagDatabaseURI, "d", config.PSQLStorage.URI, "Database URI")
 	cmd.Flags().StringP(flagRunAddress, "a", config.RunAddress, "Run address")
 	cmd.Flags().StringP(flagStorageType, "s", config.StorageType, "Storage type [psql]")
-	cmd.Flags().StringP(flagAccrualSysAddress, "r", config.Service.AccrualSysAddress, "Accruals system address")
+	cmd.Flags().StringP(flagAccrualSysAddress, "r", config.Provider.AccrualSysAddress, "Accruals system address")
 
 	cmd.AddCommand(newMigrateCmd())
 

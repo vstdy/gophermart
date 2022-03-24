@@ -25,7 +25,7 @@ func withOperation(opID string) loggerOption {
 }
 
 // Logger returns logger with service context.
-func (st Storage) Logger(opts ...loggerOption) zerolog.Logger {
+func (st *Storage) Logger(opts ...loggerOption) zerolog.Logger {
 	logCtx := log.With().Str(logging.ServiceKey, serviceName)
 	for _, opt := range opts {
 		logCtx = opt(logCtx)

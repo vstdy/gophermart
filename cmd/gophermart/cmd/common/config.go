@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/vstdy0/go-diploma/pkg"
+	"github.com/vstdy0/go-diploma/provider/accrual/http"
 	"github.com/vstdy0/go-diploma/service/gophermart/v1"
 	"github.com/vstdy0/go-diploma/storage"
 	"github.com/vstdy0/go-diploma/storage/psql"
@@ -17,6 +18,7 @@ type Config struct {
 	RunAddress  string            `mapstructure:"run_address"`
 	SecretKey   string            `mapstructure:"secret_key"`
 	StorageType string            `mapstructure:"storage_type"`
+	Provider    accrual.Config    `mapstructure:"provider,squash"`
 	Service     gophermart.Config `mapstructure:"service,squash"`
 	PSQLStorage psql.Config       `mapstructure:"psql_storage,squash"`
 }
@@ -32,6 +34,7 @@ func BuildDefaultConfig() Config {
 		RunAddress:  "0.0.0.0:8080",
 		SecretKey:   "secret_key",
 		StorageType: psqlStorage,
+		Provider:    accrual.NewDefaultConfig(),
 		Service:     gophermart.NewDefaultConfig(),
 		PSQLStorage: psql.NewDefaultConfig(),
 	}
@@ -57,11 +60,19 @@ func (config Config) BuildPsqlStorage() (*psql.Storage, error) {
 }
 
 // BuildService builds gophermart.Service dependency.
-func (config Config) BuildService(storageType string) (*gophermart.Service, error) {
+func (config Config) BuildService(ctx context.Context) (*gophermart.Service, error) {
 	var st storage.Storage
 	var err error
 
-	switch storageType {
+	prv, err := accrual.NewProvider(
+		config.Timeout,
+		accrual.WithConfig(config.Provider),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("building provider: %w", err)
+	}
+
+	switch config.StorageType {
 	case psqlStorage:
 		st, err = config.BuildPsqlStorage()
 	default:
@@ -72,7 +83,9 @@ func (config Config) BuildService(storageType string) (*gophermart.Service, erro
 	}
 
 	svc, err := gophermart.New(
+		ctx,
 		gophermart.WithConfig(config.Service),
+		gophermart.WithProvider(prv),
 		gophermart.WithStorage(st),
 	)
 	if err != nil {

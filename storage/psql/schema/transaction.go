@@ -15,7 +15,7 @@ type (
 		bun.BaseModel `bun:"transactions,alias:t"`
 		ID            uuid.UUID `bun:"id,pk,type:uuid"`
 		UserID        uuid.UUID `bun:"user_id,type:uuid,notnull"`
-		Order         string    `bun:"order,notnull"`
+		Order         string    `bun:"order,unique,notnull"`
 		Accrual       int       `bun:"accrual,notnull"`
 		Withdrawal    int       `bun:"withdrawal,notnull"`
 		ProcessedAt   time.Time `bun:"processed_at,nullzero,notnull,default:current_timestamp"`

@@ -1,14 +1,16 @@
 package gophermart
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	"github.com/vstdy0/go-diploma/pkg/logging"
+	"github.com/vstdy0/go-diploma/provider/accrual"
 	"github.com/vstdy0/go-diploma/service/gophermart"
-	inter "github.com/vstdy0/go-diploma/storage"
+	"github.com/vstdy0/go-diploma/storage"
 )
 
 const (
@@ -20,8 +22,9 @@ var _ gophermart.Service = (*Service)(nil)
 type (
 	// Service keeps service dependencies.
 	Service struct {
-		config  Config
-		storage inter.Storage
+		config   Config
+		provider accrual.Provider
+		storage  storage.Storage
 	}
 
 	// ServiceOption defines functional argument for Service constructor.
@@ -37,8 +40,17 @@ func WithConfig(config Config) ServiceOption {
 	}
 }
 
+// WithProvider sets Provider.
+func WithProvider(p accrual.Provider) ServiceOption {
+	return func(svc *Service) error {
+		svc.provider = p
+
+		return nil
+	}
+}
+
 // WithStorage sets Storage.
-func WithStorage(st inter.Storage) ServiceOption {
+func WithStorage(st storage.Storage) ServiceOption {
 	return func(svc *Service) error {
 		svc.storage = st
 
@@ -47,7 +59,7 @@ func WithStorage(st inter.Storage) ServiceOption {
 }
 
 // New creates a new gophermart service.
-func New(opts ...ServiceOption) (*Service, error) {
+func New(ctx context.Context, opts ...ServiceOption) (*Service, error) {
 	svc := &Service{
 		config: NewDefaultConfig(),
 	}
@@ -65,7 +77,7 @@ func New(opts ...ServiceOption) (*Service, error) {
 		return nil, fmt.Errorf("storage: nil")
 	}
 
-	go svc.orderStatusUpdater()
+	go svc.orderStatusUpdater(ctx)
 
 	return svc, nil
 }

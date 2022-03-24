@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"runtime"
+	"sync"
 
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
@@ -28,6 +29,8 @@ var _ inter.Storage = (*Storage)(nil)
 type (
 	// Storage keeps psql storage dependencies.
 	Storage struct {
+		sync.RWMutex
+
 		config Config
 		db     *bun.DB
 	}
@@ -80,7 +83,7 @@ func New(opts ...StorageOption) (*Storage, error) {
 }
 
 // Close closes DB connection.
-func (st Storage) Close() error {
+func (st *Storage) Close() error {
 	if st.db == nil {
 		return nil
 	}
@@ -89,7 +92,7 @@ func (st Storage) Close() error {
 }
 
 // Migrate performs DB migrations.
-func (st Storage) Migrate(ctx context.Context) error {
+func (st *Storage) Migrate(ctx context.Context) error {
 	logger := st.Logger(withOperation("migration"))
 
 	ms, err := migrations.GetMigrations()

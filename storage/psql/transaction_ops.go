@@ -2,8 +2,10 @@ package psql
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
+	"github.com/uptrace/bun/driver/pgdriver"
 
 	"github.com/vstdy0/go-diploma/model"
 	"github.com/vstdy0/go-diploma/pkg"
@@ -39,6 +41,8 @@ func (st *Storage) AddAccruals(ctx context.Context, objs []model.Transaction) er
 
 	_, err := st.db.NewInsert().
 		Model(&dbObjs).
+		On("CONFLICT (\"order\") DO UPDATE").
+		Set("accrual = excluded.accrual").
 		Exec(ctx)
 	if err != nil {
 		return err
@@ -49,6 +53,9 @@ func (st *Storage) AddAccruals(ctx context.Context, objs []model.Transaction) er
 
 // AddWithdrawal adds withdrawal.
 func (st *Storage) AddWithdrawal(ctx context.Context, obj model.Transaction) error {
+	st.Lock()
+	defer st.Unlock()
+
 	dbObj := schema.NewTransactionFromCanonical(obj)
 	var enough bool
 
@@ -69,6 +76,12 @@ func (st *Storage) AddWithdrawal(ctx context.Context, obj model.Transaction) err
 		Model(&dbObj).
 		Exec(ctx)
 	if err != nil {
+		pgErr := &pgdriver.Error{}
+		if errors.As(err, pgErr) {
+			if pgErr.IntegrityViolation() {
+				return pkg.ErrAlreadyExists
+			}
+		}
 		return err
 	}
 

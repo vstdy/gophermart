@@ -20,4 +20,4 @@ secret_key = "secret_key"
 storage_type = "psql"
 
 # Accrual system address
-accrual_system_address = "127.0.0.1:8081"
+accrual_system_address = "http://127.0.0.1:8081"
