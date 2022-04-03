@@ -1,0 +1,23 @@
+# App config example.
+
+# PostgreSQL storage configuration
+# Connection URL
+database_dsn = "postgres://user:password@localhost:5432/gophermart?sslmode=disable"
+
+# Log level
+log-level = "info"
+
+# Request timeout
+timeout = "5s"
+
+# Server address
+server_address = "0.0.0.0:8080"
+
+# Sectet key
+secret_key = "secret_key"
+
+# Storage type
+storage_type = "psql"
+
+# Accrual system address
+accrual_system_address = "http://127.0.0.1:8081"
