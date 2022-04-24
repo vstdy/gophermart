@@ -1,5 +1,5 @@
 ### 1. Register cashback rule
-POST http://127.0.0.1:8081/api/goods
+POST {{accrual_server_address}}/api/goods
 Content-Type: application/json
 
 {
@@ -9,7 +9,7 @@ Content-Type: application/json
 }
 
 ### 2. Create order to count cashback
-POST http://127.0.0.1:8081/api/orders
+POST {{accrual_server_address}}/api/orders
 Content-Type: application/json
 
 {
@@ -23,10 +23,10 @@ Content-Type: application/json
 }
 
 ### 3. Get orders cashback
-GET http://127.0.0.1:8081/api/orders/123455
+GET {{accrual_server_address}}/api/orders/123455
 
 ### 4. Register user
-POST http://127.0.0.1:8080/api/user/register
+POST {{server_address}}/api/user/register
 Content-Type: application/json; charset=UTF-8
 
 {
@@ -35,7 +35,7 @@ Content-Type: application/json; charset=UTF-8
 }
 
 ### 5. Login user
-POST http://127.0.0.1:8080/api/user/login
+POST {{server_address}}/api/user/login
 Content-Type: application/json; charset=UTF-8
 
 {
@@ -43,20 +43,21 @@ Content-Type: application/json; charset=UTF-8
   "password": "1"
 }
 
-### 6. Create order
-POST http://127.0.0.1:8080/api/user/orders
+### 6. Add order to program
+POST {{server_address}}/api/user/orders
 Content-Type: text/plain; charset=UTF-8
+# a number must be verified with Luhn algorithm
 
-12345678903
+123455
 
-### 7. Get current user orders
-GET http://127.0.0.1:8080/api/user/orders
+### 7. Get user's orders status
+GET {{server_address}}/api/user/orders
 
-### 8. Get current user balance
-GET http://127.0.0.1:8080/api/user/balance
+### 8. Get user's balance
+GET {{server_address}}/api/user/balance
 
 ### 9. Add withdrawal
-POST http://127.0.0.1:8080/api/user/balance/withdraw
+POST {{server_address}}/api/user/balance/withdraw
 Content-Type: application/json; charset=UTF-8
 
 {
@@ -65,4 +66,4 @@ Content-Type: application/json; charset=UTF-8
 }
 
 ### 10. Get current user balance
-GET http://127.0.0.1:8080/api/user/balance/withdrawals
+GET {{server_address}}/api/user/balance/withdrawals

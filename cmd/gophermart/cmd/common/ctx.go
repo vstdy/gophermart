@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/vstdy0/go-diploma/pkg"
+	"github.com/vstdy/gophermart/pkg"
 )
 
 const (

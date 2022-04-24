@@ -3,8 +3,8 @@ package api
 import (
 	"net/http"
 
-	"github.com/vstdy0/go-diploma/cmd/gophermart/cmd/common"
-	"github.com/vstdy0/go-diploma/service/gophermart/v1"
+	"github.com/vstdy/gophermart/cmd/gophermart/cmd/common"
+	"github.com/vstdy/gophermart/service/gophermart/v1"
 )
 
 // NewServer returns server.

@@ -12,9 +12,9 @@ import (
 	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/uptrace/bun/migrate"
 
-	inter "github.com/vstdy0/go-diploma/storage"
-	"github.com/vstdy0/go-diploma/storage/psql/migrations"
-	"github.com/vstdy0/go-diploma/storage/psql/schema"
+	inter "github.com/vstdy/gophermart/storage"
+	"github.com/vstdy/gophermart/storage/psql/migrations"
+	"github.com/vstdy/gophermart/storage/psql/schema"
 )
 
 const (

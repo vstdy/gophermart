@@ -8,8 +8,8 @@ import (
 	"github.com/uptrace/bun"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/vstdy0/go-diploma/model"
-	"github.com/vstdy0/go-diploma/pkg"
+	"github.com/vstdy/gophermart/model"
+	"github.com/vstdy/gophermart/pkg"
 )
 
 // User keeps user data.

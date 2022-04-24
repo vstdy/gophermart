@@ -49,6 +49,10 @@ jobs:
           (cd cmd/gophermart && go build -o gophermart)
           (cd cmd/accrual && chmod +x accrual_linux_amd64)
 
+      - name: Make migrations
+        run: |
+          ./cmd/gophermart/gophermart migrate -d 'postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable'
+
       - name: Test
         run: |
           gophermarttest \

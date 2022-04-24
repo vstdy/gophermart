@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 
-	"github.com/vstdy0/go-diploma/model"
-	"github.com/vstdy0/go-diploma/service/gophermart/v1/validator"
+	"github.com/vstdy/gophermart/model"
+	"github.com/vstdy/gophermart/service/gophermart/v1/validator"
 )
 
 // AddOrder adds given order object to storage.

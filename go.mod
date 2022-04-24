@@ -1,4 +1,4 @@
-module github.com/vstdy0/go-diploma
+module github.com/vstdy/gophermart
 
 go 1.17
 

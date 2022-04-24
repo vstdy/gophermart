@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 
-	"github.com/vstdy0/go-diploma/model"
+	"github.com/vstdy/gophermart/model"
 )
 
 // Transaction keeps order data.

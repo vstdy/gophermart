@@ -8,8 +8,8 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-diploma/api/model"
-	canonical "github.com/vstdy0/go-diploma/model"
+	"github.com/vstdy/gophermart/api/model"
+	canonical "github.com/vstdy/gophermart/model"
 )
 
 func (h Handler) setAuthCookie(w http.ResponseWriter, obj canonical.User) error {

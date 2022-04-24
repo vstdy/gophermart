@@ -10,24 +10,22 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/lestrrat-go/jwx/jwa"
 
-	"github.com/vstdy0/go-diploma/api/model"
-	"github.com/vstdy0/go-diploma/cmd/gophermart/cmd/common"
-	"github.com/vstdy0/go-diploma/pkg"
-	"github.com/vstdy0/go-diploma/service/gophermart"
+	"github.com/vstdy/gophermart/api/model"
+	"github.com/vstdy/gophermart/pkg"
+	"github.com/vstdy/gophermart/service/gophermart"
 )
 
 // Handler keeps handler dependencies.
 type Handler struct {
 	service   gophermart.Service
-	config    common.Config
 	tokenAuth *jwtauth.JWTAuth
 }
 
 // NewHandler returns a new Handler instance.
-func NewHandler(service gophermart.Service, config common.Config) Handler {
-	tokenAuth := jwtauth.New(jwa.HS256.String(), []byte(config.SecretKey), nil)
+func NewHandler(service gophermart.Service, secret string) Handler {
+	tokenAuth := jwtauth.New(jwa.HS256.String(), []byte(secret), nil)
 
-	return Handler{service: service, config: config, tokenAuth: tokenAuth}
+	return Handler{service: service, tokenAuth: tokenAuth}
 }
 
 func (h Handler) register(w http.ResponseWriter, r *http.Request) {
@@ -84,7 +82,7 @@ func (h Handler) login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h Handler) addUserOrder(w http.ResponseWriter, r *http.Request) {
+func (h Handler) addUsersOrder(w http.ResponseWriter, r *http.Request) {
 	userID, err := h.getUserID(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -121,7 +119,7 @@ func (h Handler) addUserOrder(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAccepted)
 }
 
-func (h Handler) getUserOrders(w http.ResponseWriter, r *http.Request) {
+func (h Handler) getUsersOrders(w http.ResponseWriter, r *http.Request) {
 	userID, err := h.getUserID(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -154,7 +152,7 @@ func (h Handler) getUserOrders(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h Handler) getUserBalance(w http.ResponseWriter, r *http.Request) {
+func (h Handler) getUsersBalance(w http.ResponseWriter, r *http.Request) {
 	userID, err := h.getUserID(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -222,7 +220,7 @@ func (h Handler) addWithdrawal(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h Handler) getUserWithdrawals(w http.ResponseWriter, r *http.Request) {
+func (h Handler) getUsersWithdrawals(w http.ResponseWriter, r *http.Request) {
 	userID, err := h.getUserID(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

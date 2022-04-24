@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/vstdy0/go-diploma/pkg"
-	"github.com/vstdy0/go-diploma/provider/accrual/http"
-	"github.com/vstdy0/go-diploma/service/gophermart/v1"
-	"github.com/vstdy0/go-diploma/storage"
-	"github.com/vstdy0/go-diploma/storage/psql"
+	"github.com/vstdy/gophermart/pkg"
+	"github.com/vstdy/gophermart/provider/accrual/http"
+	"github.com/vstdy/gophermart/service/gophermart/v1"
+	"github.com/vstdy/gophermart/storage"
+	"github.com/vstdy/gophermart/storage/psql"
 )
 
 // Config combines sub-configs for all services, storages and providers.
 type Config struct {
-	Timeout     time.Duration
+	Timeout     time.Duration     `mapstructure:"timeout"`
 	RunAddress  string            `mapstructure:"run_address"`
 	SecretKey   string            `mapstructure:"secret_key"`
 	StorageType string            `mapstructure:"storage_type"`
@@ -47,13 +47,6 @@ func (config Config) BuildPsqlStorage() (*psql.Storage, error) {
 	)
 	if err != nil {
 		return nil, fmt.Errorf("building psql storage: %w", err)
-	}
-
-	ctx, ctxCancel := context.WithTimeout(context.Background(), config.Timeout)
-	defer ctxCancel()
-
-	if err = st.Migrate(ctx); err != nil {
-		return nil, err
 	}
 
 	return st, nil

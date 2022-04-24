@@ -3,7 +3,7 @@ package model
 import (
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-diploma/model"
+	"github.com/vstdy/gophermart/model"
 )
 
 // Order keeps order data.

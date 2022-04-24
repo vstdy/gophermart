@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/vstdy0/go-diploma/model"
+	"github.com/vstdy/gophermart/model"
 )
 
 type RegisterBody struct {
