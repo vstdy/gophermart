@@ -228,8 +228,8 @@ Content-Length: 0
     ...
     
     {
-    	"current": 500.5,
-    	"withdrawn": 42
+        "current": 500.5,
+        "withdrawn": 42
     }
     ```
 
@@ -251,7 +251,7 @@ POST /api/user/balance/withdraw HTTP/1.1
 Content-Type: application/json
 
 {
-	"order": "2377225624",
+    "order": "2377225624",
     "sum": 751
 }
 ```

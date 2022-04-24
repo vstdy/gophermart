@@ -2,7 +2,7 @@
 package accrual
 
 import (
-	"github.com/vstdy0/go-diploma/model"
+	"github.com/vstdy/gophermart/model"
 )
 
 type Provider interface {

@@ -14,14 +14,14 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/vstdy0/go-diploma/api"
-	"github.com/vstdy0/go-diploma/cmd/gophermart/cmd/common"
-	"github.com/vstdy0/go-diploma/pkg"
+	"github.com/vstdy/gophermart/api"
+	"github.com/vstdy/gophermart/cmd/gophermart/cmd/common"
+	"github.com/vstdy/gophermart/pkg"
 )
 
 const (
 	flagConfigPath         = "config"
-	flagLogLevel           = "log-level"
+	flagLogLevel           = "log_level"
 	flagTimeout            = "timeout"
 	flagRunAddress         = "run_address"
 	flagDatabaseURI        = "database_uri"
@@ -100,7 +100,7 @@ func newRootCmd() *cobra.Command {
 	cmd.PersistentFlags().StringP(flagDatabaseURI, "d", config.PSQLStorage.URI, "Database URI")
 	cmd.Flags().StringP(flagRunAddress, "a", config.RunAddress, "Run address")
 	cmd.Flags().StringP(flagStorageType, "s", config.StorageType, "Storage type [psql]")
-	cmd.Flags().StringP(flagAccrualSysAddress, "r", config.Provider.AccrualSysAddress, "Accruals system address")
+	cmd.Flags().StringP(flagAccrualSysAddress, "r", config.Provider.AccrualSysAddress, "Accrual system address")
 
 	cmd.AddCommand(newMigrateCmd())
 
@@ -146,9 +146,7 @@ func setupConfig(cmd *cobra.Command) error {
 	configPath := viper.GetString(flagConfigPath)
 	viper.SetConfigFile(configPath)
 	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(*os.PathError); !ok {
-			return fmt.Errorf("reading config file: %w", err)
-		}
+		log.Warn().Err(err).Msg("reading config file")
 	}
 
 	viper.AutomaticEnv()
@@ -162,7 +160,6 @@ func setupConfig(cmd *cobra.Command) error {
 		return fmt.Errorf("config unmarshal: %w", err)
 	}
 
-	config.Timeout = viper.GetDuration(flagTimeout)
 	common.SetConfigToCmdCtx(cmd, config)
 
 	if config.SecretKey == "" {

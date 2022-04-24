@@ -7,10 +7,10 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/vstdy0/go-diploma/pkg/logging"
-	"github.com/vstdy0/go-diploma/provider/accrual"
-	"github.com/vstdy0/go-diploma/service/gophermart"
-	"github.com/vstdy0/go-diploma/storage"
+	"github.com/vstdy/gophermart/pkg/logging"
+	"github.com/vstdy/gophermart/provider/accrual"
+	"github.com/vstdy/gophermart/service/gophermart"
+	"github.com/vstdy/gophermart/storage"
 )
 
 const (

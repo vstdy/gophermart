@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-diploma/model"
+	"github.com/vstdy/gophermart/model"
 )
 
 type Storage interface {

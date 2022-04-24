@@ -5,9 +5,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/vstdy0/go-diploma/model"
-	"github.com/vstdy0/go-diploma/pkg"
-	"github.com/vstdy0/go-diploma/storage/psql/schema"
+	"github.com/vstdy/gophermart/model"
+	"github.com/vstdy/gophermart/pkg"
+	"github.com/vstdy/gophermart/storage/psql/schema"
 )
 
 const orderTableName = "order"

@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	canonical "github.com/vstdy0/go-diploma/model"
-	"github.com/vstdy0/go-diploma/provider/accrual"
-	"github.com/vstdy0/go-diploma/provider/accrual/http/model"
+	canonical "github.com/vstdy/gophermart/model"
+	"github.com/vstdy/gophermart/provider/accrual"
+	"github.com/vstdy/gophermart/provider/accrual/http/model"
 )
 
 var _ accrual.Provider = (*Provider)(nil)

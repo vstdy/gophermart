@@ -3,7 +3,7 @@ package validator
 import (
 	"github.com/ShiraazMoollatjie/goluhn"
 
-	"github.com/vstdy0/go-diploma/pkg"
+	"github.com/vstdy/gophermart/pkg"
 )
 
 // ValidateOrderNumber validates order number.

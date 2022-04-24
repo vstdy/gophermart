@@ -6,7 +6,7 @@ import (
 
 	"github.com/uptrace/bun"
 
-	"github.com/vstdy0/go-diploma/pkg/logging"
+	"github.com/vstdy/gophermart/pkg/logging"
 )
 
 type queryHook struct {

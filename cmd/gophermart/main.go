@@ -5,7 +5,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/vstdy0/go-diploma/cmd/gophermart/cmd"
+	"github.com/vstdy/gophermart/cmd/gophermart/cmd"
 )
 
 func main() {

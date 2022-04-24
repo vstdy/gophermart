@@ -4,7 +4,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/vstdy0/go-diploma/pkg/logging"
+	"github.com/vstdy/gophermart/pkg/logging"
 )
 
 // loggerOption customises logger context fields.
