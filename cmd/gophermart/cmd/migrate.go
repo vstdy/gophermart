@@ -17,7 +17,7 @@ func newMigrateCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config := common.GetConfigFromCmdCtx(cmd)
 
-			st, err := config.BuildPsqlStorage()
+			st, err := config.Storage.BuildStorage()
 			if err != nil {
 				return err
 			}
@@ -27,7 +27,7 @@ func newMigrateCmd() *cobra.Command {
 				}
 			}()
 
-			ctx, ctxCancel := context.WithTimeout(context.Background(), config.Timeout)
+			ctx, ctxCancel := context.WithTimeout(context.Background(), config.Storage.Timeout)
 			defer ctxCancel()
 
 			if err = st.Migrate(ctx); err != nil {

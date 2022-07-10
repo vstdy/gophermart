@@ -8,14 +8,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 
-	"github.com/vstdy/gophermart/model"
+	canonical "github.com/vstdy/gophermart/model"
 	"github.com/vstdy/gophermart/service/gophermart/v1/validator"
 )
 
 // AddOrder adds given order object to storage.
-func (svc *Service) AddOrder(ctx context.Context, obj model.Order) (model.Order, error) {
+func (svc *Service) AddOrder(ctx context.Context, obj canonical.Order) (canonical.Order, error) {
 	if err := validator.ValidateOrderNumber(obj.Number); err != nil {
-		return model.Order{}, err
+		return canonical.Order{}, err
 	}
 
 	addedObj, err := svc.storage.AddOrder(ctx, obj)
@@ -27,7 +27,7 @@ func (svc *Service) AddOrder(ctx context.Context, obj model.Order) (model.Order,
 }
 
 // GetOrders gets current user orders.
-func (svc *Service) GetOrders(ctx context.Context, userID uuid.UUID) ([]model.Order, error) {
+func (svc *Service) GetOrders(ctx context.Context, userID uuid.UUID) ([]canonical.Order, error) {
 	objs, err := svc.storage.GetOrders(ctx, userID)
 	if err != nil {
 		return objs, err
@@ -47,10 +47,10 @@ func (svc *Service) orderStatusUpdater(ctx context.Context) {
 			return fmt.Errorf("get orders objects: %w", err)
 		}
 
-		var orders []model.Order
-		var transactions []model.Transaction
+		var orders []canonical.Order
+		var transactions []canonical.Transaction
 		for _, obj := range objs {
-			order, err := svc.provider.GetOrderAccruals(obj)
+			order, err := svc.provider.accrual.GetOrderAccruals(obj)
 			if err != nil {
 				return fmt.Errorf("accrual provider: %w", err)
 			}
@@ -59,8 +59,8 @@ func (svc *Service) orderStatusUpdater(ctx context.Context) {
 				continue
 			}
 
-			if order.Status == model.OrderStatusProcessed && order.Accrual > 0 {
-				transactions = append(transactions, model.NewTransaction(order))
+			if order.Status == canonical.OrderStatusProcessed && order.Accrual > 0 {
+				transactions = append(transactions, canonical.NewTransaction(order))
 			}
 
 			orders = append(orders, order)
@@ -82,6 +82,10 @@ func (svc *Service) orderStatusUpdater(ctx context.Context) {
 			if err = svc.storage.AddAccruals(updCtx, transactions); err != nil {
 				return fmt.Errorf("add accruals: %w", err)
 			}
+
+			go func(tr []canonical.Transaction) {
+				svc.provider.ch <- tr
+			}(transactions)
 		}
 
 		return nil

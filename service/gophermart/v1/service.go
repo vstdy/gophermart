@@ -7,8 +7,10 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"github.com/vstdy/gophermart/model"
 	"github.com/vstdy/gophermart/pkg/logging"
 	"github.com/vstdy/gophermart/provider/accrual"
+	"github.com/vstdy/gophermart/provider/notification"
 	"github.com/vstdy/gophermart/service/gophermart"
 	"github.com/vstdy/gophermart/storage"
 )
@@ -23,8 +25,16 @@ type (
 	// Service keeps service dependencies.
 	Service struct {
 		config   Config
-		provider accrual.Provider
+		provider provider
 		storage  storage.Storage
+	}
+
+	// provider keeps provider dependencies.
+	provider struct {
+		ntf notification.Notification
+		ch  chan []model.Transaction
+
+		accrual accrual.Accrual
 	}
 
 	// ServiceOption defines functional argument for Service constructor.
@@ -40,10 +50,12 @@ func WithConfig(config Config) ServiceOption {
 	}
 }
 
-// WithProvider sets Provider.
-func WithProvider(p accrual.Provider) ServiceOption {
+// WithProvider sets provider.
+func WithProvider(acc accrual.Accrual, ntf notification.Notification) ServiceOption {
 	return func(svc *Service) error {
-		svc.provider = p
+		svc.provider.accrual = acc
+		svc.provider.ntf = ntf
+		svc.provider.ch = make(chan []model.Transaction)
 
 		return nil
 	}
@@ -58,8 +70,8 @@ func WithStorage(st storage.Storage) ServiceOption {
 	}
 }
 
-// New creates a new gophermart service.
-func New(ctx context.Context, opts ...ServiceOption) (*Service, error) {
+// NewService creates a new gophermart service.
+func NewService(ctx context.Context, opts ...ServiceOption) (*Service, error) {
 	svc := &Service{
 		config: NewDefaultConfig(),
 	}
@@ -69,15 +81,13 @@ func New(ctx context.Context, opts ...ServiceOption) (*Service, error) {
 		}
 	}
 
-	if err := svc.config.Validate(); err != nil {
-		return nil, fmt.Errorf("config validation: %w", err)
-	}
-
 	if svc.storage == nil {
 		return nil, fmt.Errorf("storage: nil")
 	}
 
 	go svc.orderStatusUpdater(ctx)
+	go svc.accrualNotifier(ctx)
+	go svc.provider.ntf.ConsumeAccrualNotifications(ctx)
 
 	return svc, nil
 }
@@ -87,9 +97,12 @@ func (svc *Service) Close() error {
 	if svc.storage == nil {
 		return nil
 	}
-
 	if err := svc.storage.Close(); err != nil {
 		return fmt.Errorf("closing storage: %w", err)
+	}
+
+	if err := svc.provider.ntf.Close(); err != nil {
+		return fmt.Errorf("closing kafka: %w", err)
 	}
 
 	return nil

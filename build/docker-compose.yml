@@ -2,32 +2,49 @@ version: '3.8'
 
 services:
   postgres:
-    image: "postgres:12.10-alpine"
+    container_name: gm-postgres
+    hostname: gm-postgres
+    image: postgres:12.10-alpine
+    restart: "always"
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - gm-pg_data:/var/lib/postgresql/data/
     environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=gophermart
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: gophermart
 
   gophermart:
+    container_name: gophermart
+    hostname: gophermart
     build:
       context: ..
       dockerfile: build/Dockerfile
     restart: "always"
     depends_on:
       - postgres
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    networks:
+      - default
+      - gm-kafka
     environment:
-      - DATABASE_URI=postgres://user:password@postgres:5432/gophermart?sslmode=disable
-      - ACCRUAL_SYSTEM_ADDRESS=http://accrual:8080
+      DATABASE_URI: gm-postgres://user:password@postgres:5432/gophermart?sslmode=disable
+      ACCRUAL_SYSTEM_ADDRESS: http://accrual:8080
+      KAFKA_BROKERS_ADDRESSES: gm-kafka-1:9091,gm-kafka-2:9091,gm-kafka-3:9091
 
   accrual:
+    container_name: accrual
+    hostname: accrual
     build:
       context: ../cmd/accrual
     restart: "always"
 
   nginx:
-    image: "nginx:1.20.2-alpine"
+    container_name: gm-nginx
+    hostname: gm-nginx
+    image: nginx:1.20.2-alpine
+    restart: "always"
     ports:
       - "8080:80"
       - "8081:80"
@@ -37,5 +54,106 @@ services:
       - gophermart
       - accrual
 
+  zookeeper:
+    container_name: gm-zookeeper
+    hostname: gm-zookeeper
+    image: zookeeper:3.8.0
+    restart: "unless-stopped"
+    networks:
+      - gm-kafka
+    environment:
+      ZOO_CFG_EXTRA: "clientPort=2182 server.1=localhost:2888:3888;2182"
+
+  kafka-1:
+    container_name: gm-kafka-1
+    hostname: gm-kafka-1
+    image: bitnami/kafka:3.1.0
+    restart: "unless-stopped"
+    ports:
+      - "9093:9092"
+    depends_on:
+      - zookeeper
+    networks:
+      - gm-kafka
+    command:
+      sh -c "((sleep 15 && opt/bitnami/kafka/bin/kafka-topics.sh --create
+      --bootstrap-server kafka-1:9091 --replication-factor 2
+      --partitions 3 --topic accruals)&) && /run.sh"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2182
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_LISTENERS: INTERNAL://:9091,EXTERNAL://:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://:9091,EXTERNAL://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "false"
+
+  kafka-2:
+    container_name: gm-kafka-2
+    hostname: gm-kafka-2
+    image: bitnami/kafka:3.1.0
+    restart: "unless-stopped"
+    ports:
+      - "9094:9092"
+    depends_on:
+      - zookeeper
+    networks:
+      - gm-kafka
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: gm-zookeeper:2182
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_LISTENERS: INTERNAL://:9091,EXTERNAL://:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://:9091,EXTERNAL://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "false"
+
+  kafka-3:
+    container_name: gm-kafka-3
+    hostname: gm-kafka-3
+    image: bitnami/kafka:3.1.0
+    restart: "unless-stopped"
+    ports:
+      - "9095:9092"
+    depends_on:
+      - zookeeper
+    networks:
+      - gm-kafka
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: gm-zookeeper:2182
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_LISTENERS: INTERNAL://:9091,EXTERNAL://:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://:9091,EXTERNAL://localhost:9095
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "false"
+
+  kafka-ui:
+    container_name: gm-kafka-ui
+    hostname: gm-kafka-ui
+    image: provectuslabs/kafka-ui:v0.4.0
+    restart: "unless-stopped"
+    ports:
+      - "9001:9001"
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    networks:
+      - gm-kafka
+    environment:
+      SERVER_PORT: 9001
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: gm-kafka-1:9091,gm-kafka-2:9091,gm-kafka-3:9091
+
 volumes:
-  postgres_data:
+  gm-pg_data:
+
+networks:
+  gm-kafka:

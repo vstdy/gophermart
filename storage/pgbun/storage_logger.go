@@ -1,4 +1,4 @@
-package psql
+package pgbun
 
 import (
 	"github.com/rs/zerolog"

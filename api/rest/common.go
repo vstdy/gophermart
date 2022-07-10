@@ -1,4 +1,4 @@
-package api
+package rest
 
 import (
 	"context"
@@ -8,12 +8,13 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/google/uuid"
 
-	"github.com/vstdy/gophermart/api/model"
+	"github.com/vstdy/gophermart/api/rest/model"
 	canonical "github.com/vstdy/gophermart/model"
 )
 
-func (h Handler) setAuthCookie(w http.ResponseWriter, obj canonical.User) error {
-	_, token, err := h.tokenAuth.Encode(model.NewJWTClaims(obj))
+// addJWTCookie adds a jwt cookie to the response.
+func (h Handler) addJWTCookie(w http.ResponseWriter, obj canonical.User) error {
+	_, token, err := h.jwtAuth.Encode(model.NewJWTClaims(obj))
 	if err != nil {
 		return fmt.Errorf("auth cookie: %v", err)
 	}
@@ -25,9 +26,14 @@ func (h Handler) setAuthCookie(w http.ResponseWriter, obj canonical.User) error 
 	}
 	http.SetCookie(w, &cookie)
 
+	if _, err = w.Write([]byte(token)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
+// getUserID retrieves the user ID from the context.
 func (h Handler) getUserID(ctx context.Context) (uuid.UUID, error) {
 	_, claims, err := jwtauth.FromContext(ctx)
 	if err != nil {
@@ -39,23 +45,4 @@ func (h Handler) getUserID(ctx context.Context) (uuid.UUID, error) {
 	}
 
 	return userID, nil
-}
-
-func (h Handler) addOrder(ctx context.Context, userID uuid.UUID, orderID string) (canonical.Order, error) {
-	order := model.Order{
-		UserID: userID,
-		Number: orderID,
-	}
-
-	obj, err := order.ToCanonical()
-	if err != nil {
-		return canonical.Order{}, err
-	}
-
-	dbObj, err := h.service.AddOrder(ctx, obj)
-	if err != nil {
-		return dbObj, err
-	}
-
-	return dbObj, nil
 }

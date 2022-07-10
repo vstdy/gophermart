@@ -11,55 +11,51 @@ import (
 	"github.com/vstdy/gophermart/provider/accrual/http/model"
 )
 
-var _ accrual.Provider = (*Provider)(nil)
+var _ accrual.Accrual = (*Accrual)(nil)
+
+// Accrual keeps accrual service configuration.
+type (
+	Accrual struct {
+		config Config
+		client http.Client
+	}
+
+	// AccrualOption defines functional argument for Accrual constructor.
+	AccrualOption func(*Accrual) error
+)
 
 // WithConfig sets Config.
-func WithConfig(config Config) ProviderOption {
-	return func(svc *Provider) error {
+func WithConfig(config Config) AccrualOption {
+	return func(svc *Accrual) error {
 		svc.config = config
 
 		return nil
 	}
 }
 
-// Provider keeps accrual service configuration.
-type (
-	Provider struct {
-		config Config
-		client http.Client
-	}
-
-	// ProviderOption defines functional argument for Provider constructor.
-	ProviderOption func(*Provider) error
-)
-
-// NewProvider returns a new Provider instance.
-func NewProvider(timeout time.Duration, opts ...ProviderOption) (*Provider, error) {
-	prv := &Provider{
+// NewAccrualProvider returns a new Accrual instance.
+func NewAccrualProvider(timeout time.Duration, opts ...AccrualOption) (*Accrual, error) {
+	acr := &Accrual{
 		config: NewDefaultConfig(),
 	}
 	for optIdx, opt := range opts {
-		if err := opt(prv); err != nil {
+		if err := opt(acr); err != nil {
 			return nil, fmt.Errorf("applying option [%d]: %w", optIdx, err)
 		}
 	}
 
-	if err := prv.config.Validate(); err != nil {
-		return nil, fmt.Errorf("config validation: %w", err)
-	}
-
-	prv.client = http.Client{Timeout: timeout}
+	acr.client = http.Client{Timeout: timeout}
 	transport := &http.Transport{}
 	transport.MaxIdleConns = 1
-	prv.client.Transport = transport
+	acr.client.Transport = transport
 
-	return prv, nil
+	return acr, nil
 }
 
-// GetOrderAccruals implements the accrual.Provider interface.
-func (p Provider) GetOrderAccruals(obj canonical.Order) (canonical.Order, error) {
-	url := fmt.Sprintf("%s/api/orders/%s", p.config.AccrualSysAddress, obj.Number)
-	r, err := p.client.Get(url)
+// GetOrderAccruals implements the Accrual interface.
+func (a *Accrual) GetOrderAccruals(obj canonical.Order) (canonical.Order, error) {
+	url := fmt.Sprintf("%s/api/orders/%s", a.config.AccrualSysAddress, obj.Number)
+	r, err := a.client.Get(url)
 	if err != nil {
 		return canonical.Order{}, fmt.Errorf("retrieving order object: %w", err)
 	}

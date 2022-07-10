@@ -1,4 +1,4 @@
-package psql
+package pgbun
 
 import (
 	"context"
@@ -13,12 +13,12 @@ import (
 	"github.com/uptrace/bun/migrate"
 
 	inter "github.com/vstdy/gophermart/storage"
-	"github.com/vstdy/gophermart/storage/psql/migrations"
-	"github.com/vstdy/gophermart/storage/psql/schema"
+	"github.com/vstdy/gophermart/storage/pgbun/migrations"
+	"github.com/vstdy/gophermart/storage/pgbun/schema"
 )
 
 const (
-	serviceName = "psql"
+	serviceName = "pgbun"
 
 	dbTableLoggingKey     = "db-table"
 	dbOperationLoggingKey = "db-operation"
@@ -57,10 +57,6 @@ func New(opts ...StorageOption) (*Storage, error) {
 		if err := opt(st); err != nil {
 			return nil, fmt.Errorf("applying option [%d]: %w", optIdx, err)
 		}
-	}
-
-	if err := st.config.Validate(); err != nil {
-		return nil, fmt.Errorf("config validation: %w", err)
 	}
 
 	sqlDB := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(st.config.URI)))

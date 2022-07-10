@@ -1,4 +1,4 @@
-package api
+package rest
 
 import (
 	"encoding/json"
@@ -8,26 +8,24 @@ import (
 
 	"github.com/go-chi/jwtauth/v5"
 	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/lestrrat-go/jwx/jwa"
 
-	"github.com/vstdy/gophermart/api/model"
+	"github.com/vstdy/gophermart/api/rest/model"
 	"github.com/vstdy/gophermart/pkg"
 	"github.com/vstdy/gophermart/service/gophermart"
 )
 
 // Handler keeps handler dependencies.
 type Handler struct {
-	service   gophermart.Service
-	tokenAuth *jwtauth.JWTAuth
+	service gophermart.Service
+	jwtAuth *jwtauth.JWTAuth
 }
 
 // NewHandler returns a new Handler instance.
-func NewHandler(service gophermart.Service, secret string) Handler {
-	tokenAuth := jwtauth.New(jwa.HS256.String(), []byte(secret), nil)
-
-	return Handler{service: service, tokenAuth: tokenAuth}
+func NewHandler(service gophermart.Service, jwtAuth *jwtauth.JWTAuth) Handler {
+	return Handler{service: service, jwtAuth: jwtAuth}
 }
 
+// register registers user.
 func (h Handler) register(w http.ResponseWriter, r *http.Request) {
 	var bodyObj model.RegisterBody
 	err := json.NewDecoder(r.Body).Decode(&bodyObj)
@@ -49,12 +47,13 @@ func (h Handler) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = h.setAuthCookie(w, obj); err != nil {
+	if err = h.addJWTCookie(w, obj); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
+// login authorizes user.
 func (h Handler) login(w http.ResponseWriter, r *http.Request) {
 	var bodyObj model.RegisterBody
 	err := json.NewDecoder(r.Body).Decode(&bodyObj)
@@ -76,12 +75,13 @@ func (h Handler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = h.setAuthCookie(w, obj); err != nil {
+	if err = h.addJWTCookie(w, obj); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
+// addUsersOrder adds the user's order.
 func (h Handler) addUsersOrder(w http.ResponseWriter, r *http.Request) {
 	userID, err := h.getUserID(r.Context())
 	if err != nil {
@@ -97,7 +97,8 @@ func (h Handler) addUsersOrder(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	orderID := string(body)
 
-	obj, err := h.addOrder(r.Context(), userID, orderID)
+	rawObj := model.NewOrder(userID, orderID).ToCanonical()
+	obj, err := h.service.AddOrder(r.Context(), rawObj)
 	if err != nil {
 		if errors.Is(err, pkg.ErrAlreadyExists) && obj.UserID == userID {
 			http.Error(w, "order number has been already uploaded", http.StatusOK)
@@ -119,6 +120,7 @@ func (h Handler) addUsersOrder(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAccepted)
 }
 
+// getUsersOrders returns user's orders.
 func (h Handler) getUsersOrders(w http.ResponseWriter, r *http.Request) {
 	userID, err := h.getUserID(r.Context())
 	if err != nil {
@@ -131,14 +133,12 @@ func (h Handler) getUsersOrders(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
 	if objs == nil {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
 	orders := model.NewOrdersFromCanonical(objs)
-
 	res, err := json.Marshal(orders)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -152,6 +152,7 @@ func (h Handler) getUsersOrders(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// getUsersBalance returns the user's balance.
 func (h Handler) getUsersBalance(w http.ResponseWriter, r *http.Request) {
 	userID, err := h.getUserID(r.Context())
 	if err != nil {
@@ -165,11 +166,7 @@ func (h Handler) getUsersBalance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	balance := model.BalanceResponse{
-		Current:   current,
-		Withdrawn: used,
-	}
-
+	balance := model.NewBalanceResponse(current, used)
 	res, err := json.Marshal(balance)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -183,6 +180,7 @@ func (h Handler) getUsersBalance(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// addWithdrawal adds user's withdrawal.
 func (h Handler) addWithdrawal(w http.ResponseWriter, r *http.Request) {
 	userID, err := h.getUserID(r.Context())
 	if err != nil {
@@ -220,6 +218,7 @@ func (h Handler) addWithdrawal(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// getUsersWithdrawals returns user's withdrawals.
 func (h Handler) getUsersWithdrawals(w http.ResponseWriter, r *http.Request) {
 	userID, err := h.getUserID(r.Context())
 	if err != nil {

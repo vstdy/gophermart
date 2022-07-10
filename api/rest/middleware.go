@@ -1,4 +1,4 @@
-package api
+package rest
 
 import (
 	"compress/gzip"
@@ -7,12 +7,12 @@ import (
 	"strings"
 )
 
-type gzipResponseWriter struct {
+type ResponseWriter struct {
 	http.ResponseWriter
 	Writer io.Writer
 }
 
-func (w gzipResponseWriter) Write(b []byte) (int, error) {
+func (w ResponseWriter) Write(b []byte) (int, error) {
 	return w.Writer.Write(b)
 }
 
@@ -49,7 +49,7 @@ func gzipCompressResponse(next http.Handler) http.Handler {
 		defer gz.Close()
 
 		w.Header().Set("Content-Encoding", "gzip")
-		next.ServeHTTP(gzipResponseWriter{ResponseWriter: w, Writer: gz}, r)
+		next.ServeHTTP(ResponseWriter{ResponseWriter: w, Writer: gz}, r)
 	}
 
 	return http.HandlerFunc(fn)

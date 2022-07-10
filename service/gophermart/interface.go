@@ -6,26 +6,29 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/vstdy/gophermart/model"
+	canonical "github.com/vstdy/gophermart/model"
 )
 
 type Service interface {
 	io.Closer
 
 	// CreateUser creates a new model.User.
-	CreateUser(ctx context.Context, obj model.User) (model.User, error)
+	CreateUser(ctx context.Context, obj canonical.User) (canonical.User, error)
 	// AuthenticateUser verifies the identity of credentials.
-	AuthenticateUser(ctx context.Context, obj model.User) (model.User, error)
+	AuthenticateUser(ctx context.Context, obj canonical.User) (canonical.User, error)
 
 	// AddOrder adds given order to storage.
-	AddOrder(ctx context.Context, obj model.Order) (model.Order, error)
+	AddOrder(ctx context.Context, obj canonical.Order) (canonical.Order, error)
 	// GetOrders gets current user orders.
-	GetOrders(ctx context.Context, userID uuid.UUID) ([]model.Order, error)
+	GetOrders(ctx context.Context, userID uuid.UUID) ([]canonical.Order, error)
 
 	// GetBalance gets current user balance.
 	GetBalance(ctx context.Context, userID uuid.UUID) (float32, float32, error)
 	// AddWithdrawal adds withdrawal.
-	AddWithdrawal(ctx context.Context, transaction model.Transaction) error
+	AddWithdrawal(ctx context.Context, transaction canonical.Transaction) error
 	// GetWithdrawals gets current user withdrawals.
-	GetWithdrawals(ctx context.Context, userID uuid.UUID) ([]model.Transaction, error)
+	GetWithdrawals(ctx context.Context, userID uuid.UUID) ([]canonical.Transaction, error)
+
+	// GetAccrualNotificationsChan returns accrual notifications channel.
+	GetAccrualNotificationsChan() chan canonical.Transaction
 }

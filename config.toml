@@ -17,7 +17,7 @@ server_address = "0.0.0.0:8080"
 secret_key = "secret_key"
 
 # Storage type
-storage_type = "psql"
+storage_type = "pgbun"
 
 # Accrual system address
 accrual_system_address = "http://127.0.0.1:8081"

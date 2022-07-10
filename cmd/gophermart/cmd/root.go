@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,9 +15,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/vstdy/gophermart/api"
 	"github.com/vstdy/gophermart/cmd/gophermart/cmd/common"
-	"github.com/vstdy/gophermart/pkg"
 )
 
 const (
@@ -27,6 +26,7 @@ const (
 	flagDatabaseURI        = "database_uri"
 	flagStorageType        = "storage_type"
 	flagAccrualSysAddress  = "accrual_system_address"
+	flagKafkaBrokerAddress = "kafka_broker_address"
 	envSecretKey           = "secret_key"
 	envUpdaterTimeout      = "updater_timeout"
 	envStatusCheckInterval = "status_check_interval"
@@ -62,10 +62,16 @@ func newRootCmd() *cobra.Command {
 				return fmt.Errorf("app initialization: service building: %w", err)
 			}
 
-			srv := api.NewServer(svc, config)
+			r, ws := config.API.BuildAPI(svc)
 
 			go func() {
-				if err = srv.ListenAndServe(); err != http.ErrServerClosed {
+				if err := ws.Serve(); err != io.EOF {
+					log.Error().Err(err).Msg("WebSocket server Serve")
+				}
+			}()
+
+			go func() {
+				if err := r.ListenAndServe(); err != http.ErrServerClosed {
 					log.Error().Err(err).Msg("HTTP server ListenAndServe")
 				}
 			}()
@@ -79,8 +85,12 @@ func newRootCmd() *cobra.Command {
 			shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer shutdownCancel()
 
-			if err = srv.Shutdown(shutdownCtx); err != nil {
-				return fmt.Errorf("shutting shutdown server: %w", err)
+			if err = ws.Close(); err != nil {
+				log.Error().Err(err).Msg("shutting down WebSocket server")
+			}
+
+			if err = r.Shutdown(shutdownCtx); err != nil {
+				log.Error().Err(err).Msg("shutting down HTTP server")
 			}
 
 			if err = svc.Close(); err != nil {
@@ -96,11 +106,12 @@ func newRootCmd() *cobra.Command {
 	config := common.BuildDefaultConfig()
 	cmd.PersistentFlags().String(flagConfigPath, "./config.toml", "Config file path")
 	cmd.PersistentFlags().String(flagLogLevel, "info", "Logger level [debug,info,warn,error,fatal]")
-	cmd.PersistentFlags().Duration(flagTimeout, config.Timeout, "Request timeout")
-	cmd.PersistentFlags().StringP(flagDatabaseURI, "d", config.PSQLStorage.URI, "Database URI")
-	cmd.Flags().StringP(flagRunAddress, "a", config.RunAddress, "Run address")
-	cmd.Flags().StringP(flagStorageType, "s", config.StorageType, "Storage type [psql]")
-	cmd.Flags().StringP(flagAccrualSysAddress, "r", config.Provider.AccrualSysAddress, "Accrual system address")
+	cmd.PersistentFlags().Duration(flagTimeout, config.API.Rest.Timeout, "Request timeout")
+	cmd.PersistentFlags().StringP(flagDatabaseURI, "d", config.Storage.PgBun.URI, "Database URI")
+	cmd.Flags().StringP(flagRunAddress, "a", config.API.Rest.RunAddress, "Run address")
+	cmd.Flags().StringP(flagStorageType, "s", config.Storage.StorageType, "Storage type [psql]")
+	cmd.Flags().StringP(flagAccrualSysAddress, "r", config.Provider.Accrual.AccrualSysAddress, "Accrual system address")
+	cmd.Flags().StringSliceP(flagKafkaBrokerAddress, "k", config.Provider.Kafka.BrokersAddresses, "Kafka brokers addresses")
 
 	cmd.AddCommand(newMigrateCmd())
 
@@ -160,11 +171,11 @@ func setupConfig(cmd *cobra.Command) error {
 		return fmt.Errorf("config unmarshal: %w", err)
 	}
 
-	common.SetConfigToCmdCtx(cmd, config)
-
-	if config.SecretKey == "" {
-		return fmt.Errorf("%s config: %w", envSecretKey, pkg.ErrNoValue)
+	if err := config.Validate(); err != nil {
+		return fmt.Errorf("setting up config: %w", err)
 	}
+
+	common.SetConfigToCmdCtx(cmd, config)
 
 	return nil
 }

@@ -14,6 +14,13 @@ type BalanceResponse struct {
 	Withdrawn float32 `json:"withdrawn"`
 }
 
+func NewBalanceResponse(current, used float32) BalanceResponse {
+	return BalanceResponse{
+		Current:   current,
+		Withdrawn: used,
+	}
+}
+
 type AddWithdrawalBody struct {
 	Order string  `json:"order"`
 	Sum   float32 `json:"sum"`

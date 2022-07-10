@@ -17,17 +17,11 @@ type Order struct {
 	UploadedAt time.Time `json:"uploaded_at"`
 }
 
-// ToCanonical converts a API model to canonical model.
-func (o Order) ToCanonical() (model.Order, error) {
-	obj := model.Order{
-		UserID:     o.UserID,
-		Number:     o.Number,
-		Status:     model.NewOrderStatusFromStr(o.Status),
-		Accrual:    o.Accrual,
-		UploadedAt: o.UploadedAt,
+func NewOrder(userID uuid.UUID, number string) Order {
+	return Order{
+		UserID: userID,
+		Number: number,
 	}
-
-	return obj, nil
 }
 
 // NewOrdersFromCanonical creates a new Order object from canonical model.
@@ -44,6 +38,19 @@ func NewOrdersFromCanonical(objs []model.Order) []Order {
 	}
 
 	return orders
+}
+
+// ToCanonical converts a API model to canonical model.
+func (o Order) ToCanonical() model.Order {
+	obj := model.Order{
+		UserID:     o.UserID,
+		Number:     o.Number,
+		Status:     model.NewOrderStatusFromStr(o.Status),
+		Accrual:    o.Accrual,
+		UploadedAt: o.UploadedAt,
+	}
+
+	return obj
 }
 
 // MarshalJSON implements interface json.Marshaler.

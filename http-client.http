@@ -25,6 +25,9 @@ Content-Type: application/json
 ### 3. Get orders cashback
 GET {{accrual_server_address}}/api/orders/123455
 
+### 4. Get socket
+GET {{server_address}}/notifications/socket/page
+
 ### 4. Register user
 POST {{server_address}}/api/user/register
 Content-Type: application/json; charset=UTF-8

@@ -1,15 +1,14 @@
-package psql
+package pgbun
 
 import (
 	"context"
-	"errors"
-
 	"database/sql"
+	"errors"
 
 	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/vstdy/gophermart/model"
 	"github.com/vstdy/gophermart/pkg"
-	"github.com/vstdy/gophermart/storage/psql/schema"
+	"github.com/vstdy/gophermart/storage/pgbun/schema"
 )
 
 const userTableName = "user"

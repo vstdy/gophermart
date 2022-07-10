@@ -1,0 +1,78 @@
+<html>
+
+<head>
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta charset="utf-8">
+  <title>Get Data</title>
+  <script src="https://cdn.socket.io/socket.io-1.3.7.min.js"></script>
+</head>
+
+<body>
+  <label for="host">Server</label>
+  <input id="host" type="text" value="ws://127.0.0.1:8080" />
+
+  <label for="path">Path</label>
+  <input id="path" type="text" value="/notifications/socket" />
+
+  <label for="token">Token</label>
+  <input id="token" type="text" value="Bearer ***" />
+
+  <br /><br />
+  <button onclick="sign_in()">Sign in</button>
+  <button onclick="sign_out()">Sign out</button>
+  <br /><br />
+
+  <span id="status">***Disconnected***</span>
+  <br /><br />
+
+  <textarea id="text" cols="60" rows="25"></textarea>
+  <script>
+    let host = document.getElementById('host').value;
+    let path = document.getElementById('path').value;
+    document.getElementById('token').value = "Bearer <token>";
+
+    let ioClient = io(host, {
+      path,
+      reconnection: false,
+      reconnectionDelay: 5000
+    });
+
+    ioClient.on('connect', () => {
+      console.log('connect', ioClient.id);
+    });
+
+    ioClient.on('status', function (data) {
+      console.log("status");
+      document.getElementById("status").innerHTML = data;
+    });
+
+    ioClient.on('new_notification', function (data) {
+      console.log('new notification');
+      let text = document.getElementById("text");
+      text.value = text.value + '\n' + data;
+    });
+
+    ioClient.on('disconnect', (reason) => {
+      console.log('disconnect');
+      let text = document.getElementById("text");
+      text.value = `${text.value}\nDisconnect: ${reason}`;
+    });
+
+    ioClient.on('error', (error) => {
+      console.log('error');
+      let text = document.getElementById("text");
+      text.value = `${text.value}\n${error}`;
+    });
+
+    function sign_in(e) {
+      let token = document.getElementById('token').value;
+      ioClient.emit('join_room', token);
+    }
+
+    function sign_out(e) {
+      ioClient.emit('leave_room');
+    }
+  </script>
+</body>
+
+</html>

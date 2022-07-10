@@ -13,6 +13,8 @@ import (
 type Storage interface {
 	io.Closer
 
+	Migrate(ctx context.Context) error
+
 	// CreateUser adds given objects to storage.
 	CreateUser(ctx context.Context, obj model.User) (model.User, error)
 	// AuthenticateUser verifies the identity of credentials.

@@ -1,4 +1,4 @@
-package psql
+package pgbun
 
 import "fmt"
 
@@ -14,7 +14,7 @@ type Config struct {
 // Validate performs a basic validation.
 func (config Config) Validate() error {
 	if config.URI == "" {
-		return fmt.Errorf("%s field: empty", "DSN")
+		return fmt.Errorf("database_uri field: empty")
 	}
 
 	return nil

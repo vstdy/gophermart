@@ -1,4 +1,4 @@
-package psql
+package pgbun
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/vstdy/gophermart/model"
 	"github.com/vstdy/gophermart/pkg"
-	"github.com/vstdy/gophermart/storage/psql/schema"
+	"github.com/vstdy/gophermart/storage/pgbun/schema"
 )
 
 const orderTableName = "order"

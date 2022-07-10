@@ -37,8 +37,8 @@ func NewTransactionFromCanonical(obj model.Transaction) Transaction {
 // NewTransactionsFromCanonical creates new list of Transaction DB objects from list of canonical models.
 func NewTransactionsFromCanonical(objs []model.Transaction) []Transaction {
 	var transactions []Transaction
-	for _, transaction := range objs {
-		transactions = append(transactions, NewTransactionFromCanonical(transaction))
+	for _, obj := range objs {
+		transactions = append(transactions, NewTransactionFromCanonical(obj))
 	}
 
 	return transactions
